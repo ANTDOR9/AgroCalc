@@ -1,0 +1,93 @@
+/* ============================================
+   MOLINO DE ARROZ — Base & Reset
+   ============================================ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--c-bg);
+  color: var(--c-text);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--c-surface); }
+::-webkit-scrollbar-thumb { background: var(--c-surface3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--c-border2); }
+
+/* Selección de texto */
+::selection { background: var(--c-accent); color: var(--c-bg); }
+
+/* Inputs base */
+input[type="number"],
+input[type="text"],
+input[type="date"] {
+  font-family: var(--font-body);
+  font-size: 13px;
+  background: var(--c-surface3);
+  color: var(--c-text);
+  border: 1px solid var(--c-border2);
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  outline: none;
+  width: 100%;
+}
+
+input[type="number"]:focus,
+input[type="text"]:focus,
+input[type="date"]:focus {
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 3px var(--c-accent-glow);
+}
+
+input[type="number"] { text-align: right; }
+
+/* Eliminar flechas de inputs numéricos */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+input[type=number] { -moz-appearance: textfield; }
+
+button { cursor: pointer; font-family: var(--font-body); }
+
+table { border-collapse: collapse; width: 100%; }
+
+/* Animaciones de entrada */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+.animate-up  { animation: fadeUp 0.35s ease both; }
+.animate-in  { animation: fadeIn 0.25s ease both; }
+
+/* Utilidades */
+.num { font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+.text-accent  { color: var(--c-accent); }
+.text-danger  { color: var(--c-danger); }
+.text-warn    { color: var(--c-warn); }
+.text-muted   { color: var(--c-text2); }
+.text-right   { text-align: right; }
+.text-center  { text-align: center; }
+.no-print     {}
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; color: #000; }
+}
