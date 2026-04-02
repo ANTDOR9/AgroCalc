@@ -8,7 +8,7 @@ espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.6.1"
 activityCompose = "1.13.0"
 composeBom = "2024.09.00"
-ksp = "2.0.0-1.0.21"
+ksp = "2.0.21-1.0.28"   # ← linea que hace compatible con mi version de kotlin anitguo
 
 
 [libraries]

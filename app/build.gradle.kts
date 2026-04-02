@@ -69,4 +69,6 @@ dependencies {
 
     implementation("androidx.core:core-ktx:1.12.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
+
+    implementation("androidx.compose.runtime:runtime-livedata:1.6.0")
 }
