@@ -5,10 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-
 import androidx.compose.material.icons.filled.DateRange
-
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,6 +24,17 @@ import com.example.agrocalc.viewmodel.AgroCalcViewModel
 fun HomeScreen(navController: NavController, viewModel: AgroCalcViewModel) {
     val productos by viewModel.productos.observeAsState(emptyList())
     var showDialog by remember { mutableStateOf(false) }
+    var productoSeleccionado by remember { mutableStateOf<Producto?>(null) }
+
+    // Observar sesion creada y navegar UNA sola vez
+    val sesionId by viewModel.sesionActualId.observeAsState()
+    LaunchedEffect(sesionId) {
+        if (sesionId != null && sesionId != 0) {
+            val nombre = productoSeleccionado?.nombre ?: "Producto"
+            navController.navigate("session/$sesionId/$nombre")
+            viewModel.resetSesionActual()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -75,24 +83,13 @@ fun HomeScreen(navController: NavController, viewModel: AgroCalcViewModel) {
                 )
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(productos) { producto ->
-                        ProductoCard(
-                            producto = producto,
-                            onClick = {
-                                viewModel.iniciarSesion(producto.id)
-                            }
-                        )
+                        ProductoCard(producto = producto, onClick = {
+                            productoSeleccionado = producto
+                            viewModel.iniciarSesion(producto.id)
+                        })
                     }
                 }
             }
-        }
-    }
-
-    // Observar cuando se crea la sesión y navegar
-    val sesionId by viewModel.sesionActualId.observeAsState()
-    LaunchedEffect(sesionId) {
-        sesionId?.let { id ->
-            val producto = productos.find { it.id == viewModel.sesionActualId.value }
-            navController.navigate("session/$id/${producto?.nombre ?: "Producto"}")
         }
     }
 
@@ -101,6 +98,7 @@ fun HomeScreen(navController: NavController, viewModel: AgroCalcViewModel) {
             productos = productos,
             onDismiss = { showDialog = false },
             onConfirm = { producto ->
+                productoSeleccionado = producto
                 viewModel.iniciarSesion(producto.id)
                 showDialog = false
             }

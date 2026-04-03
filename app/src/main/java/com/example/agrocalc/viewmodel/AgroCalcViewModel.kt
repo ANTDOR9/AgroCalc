@@ -59,6 +59,10 @@ class AgroCalcViewModel(private val repository: AgroCalcRepository) : ViewModel(
     fun eliminarProducto(producto: Producto) {
         viewModelScope.launch { repository.eliminarProducto(producto) }
     }
+
+    fun resetSesionActual() {
+        _sesionActualId.value = null
+    }
 }
 
 class AgroCalcViewModelFactory(private val repository: AgroCalcRepository) :
