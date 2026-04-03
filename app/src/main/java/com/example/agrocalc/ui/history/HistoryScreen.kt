@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -21,6 +22,19 @@ import com.example.agrocalc.viewmodel.AgroCalcViewModel
 @Composable
 fun HistoryScreen(navController: NavController, viewModel: AgroCalcViewModel) {
     val sesiones: List<Sesion> by viewModel.sesiones.observeAsState(emptyList())
+    val productos by viewModel.productos.observeAsState(emptyList())
+    var busqueda by remember { mutableStateOf("") }
+
+    // Filtrar sesiones por busqueda
+    val sesionesFiltradas = remember(sesiones, busqueda) {
+        if (busqueda.isEmpty()) sesiones
+        else sesiones.filter { sesion ->
+            sesion.fecha.contains(busqueda, ignoreCase = true) ||
+                    sesion.id.toString().contains(busqueda) ||
+                    productos.find { it.id == sesion.productoId }
+                        ?.nombre?.contains(busqueda, ignoreCase = true) == true
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -38,19 +52,56 @@ fun HistoryScreen(navController: NavController, viewModel: AgroCalcViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp)
         ) {
-            if (sesiones.isEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Barra de búsqueda
+            OutlinedTextField(
+                value = busqueda,
+                onValueChange = { busqueda = it },
+                label = { Text("Buscar por producto, fecha o #sesión") },
+                leadingIcon = {
+                    Icon(Icons.Default.Search, contentDescription = "Buscar")
+                },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Contador
+            Text(
+                "${sesionesFiltradas.size} sesiones encontradas",
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (sesionesFiltradas.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No hay sesiones registradas", fontSize = 16.sp)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("No se encontraron sesiones", fontSize = 16.sp)
+                        if (busqueda.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            TextButton(onClick = { busqueda = "" }) {
+                                Text("Limpiar búsqueda")
+                            }
+                        }
+                    }
                 }
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(items = sesiones, key = { sesion -> sesion.id }) { sesion ->
+                    items(items = sesionesFiltradas, key = { it.id }) { sesion ->
+                        val productoNombre = productos.find {
+                            it.id == sesion.productoId
+                        }?.nombre ?: "Producto"
                         SesionHistorialItem(
                             sesion = sesion,
+                            productoNombre = productoNombre,
                             onClick = {
-                                navController.navigate("session/${sesion.id}/Sesión")
+                                navController.navigate("session/${sesion.id}/$productoNombre")
                             }
                         )
                     }
@@ -61,7 +112,7 @@ fun HistoryScreen(navController: NavController, viewModel: AgroCalcViewModel) {
 }
 
 @Composable
-fun SesionHistorialItem(sesion: Sesion, onClick: () -> Unit) {
+fun SesionHistorialItem(sesion: Sesion, productoNombre: String, onClick: () -> Unit) {
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth()
@@ -71,10 +122,10 @@ fun SesionHistorialItem(sesion: Sesion, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text("Sesión #${sesion.id}", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Text(sesion.fecha, fontSize = 13.sp,
+                Text(productoNombre, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text("Sesión #${sesion.id}", fontSize = 13.sp)
+                Text(sesion.fecha, fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("Estado: ${sesion.estado}", fontSize = 12.sp)
             }
         }
     }

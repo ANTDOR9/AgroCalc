@@ -71,4 +71,9 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
 
     implementation("androidx.compose.runtime:runtime-livedata:1.6.0")
+
+
+    implementation("co.yml:ycharts:2.1.0")
+
+    implementation("androidx.compose.material:material-icons-extended:1.6.0")
 }

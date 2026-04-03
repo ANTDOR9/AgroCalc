@@ -17,6 +17,9 @@ class AgroCalcViewModel(private val repository: AgroCalcRepository) : ViewModel(
     fun getCamionesBySesion(sesionId: Int) =
         repository.getCamionesBySesion(sesionId).asLiveData()
 
+    fun getSesionesByProducto(productoId: Int) =
+        repository.getSesionesByProducto(productoId).asLiveData()
+
     fun insertarProducto(nombre: String, unidad: String, humedadRef: Double) {
         viewModelScope.launch {
             repository.insertarProducto(
@@ -60,9 +63,21 @@ class AgroCalcViewModel(private val repository: AgroCalcRepository) : ViewModel(
         viewModelScope.launch { repository.eliminarProducto(producto) }
     }
 
+
+
+    fun editarCamion(camion: Camion) {
+        viewModelScope.launch { repository.actualizarCamion(camion) }
+    }
+
+
+
     fun resetSesionActual() {
         _sesionActualId.value = null
     }
+
+
+
+    suspend fun getCamionById(id: Int): Camion? = repository.getCamionById(id)
 }
 
 class AgroCalcViewModelFactory(private val repository: AgroCalcRepository) :

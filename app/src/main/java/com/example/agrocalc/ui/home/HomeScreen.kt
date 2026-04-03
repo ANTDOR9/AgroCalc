@@ -17,16 +17,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.agrocalc.data.Producto
+import com.example.agrocalc.data.Sesion
 import com.example.agrocalc.viewmodel.AgroCalcViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController, viewModel: AgroCalcViewModel) {
     val productos by viewModel.productos.observeAsState(emptyList())
-    var showDialog by remember { mutableStateOf(false) }
     var productoSeleccionado by remember { mutableStateOf<Producto?>(null) }
+    var showNuevaSesionDialog by remember { mutableStateOf(false) }
+    var showSesionesDialog by remember { mutableStateOf(false) }
 
-    // Observar sesion creada y navegar UNA sola vez
     val sesionId by viewModel.sesionActualId.observeAsState()
     LaunchedEffect(sesionId) {
         if (sesionId != null && sesionId != 0) {
@@ -49,11 +50,6 @@ fun HomeScreen(navController: NavController, viewModel: AgroCalcViewModel) {
                     }
                 }
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { showDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Nueva sesión")
-            }
         }
     ) { padding ->
         Column(
@@ -76,34 +72,101 @@ fun HomeScreen(navController: NavController, viewModel: AgroCalcViewModel) {
                 }
             } else {
                 Text(
-                    "Selecciona un producto para iniciar",
+                    "Selecciona un producto",
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(productos) { producto ->
-                        ProductoCard(producto = producto, onClick = {
-                            productoSeleccionado = producto
-                            viewModel.iniciarSesion(producto.id)
-                        })
+                        ProductoCard(
+                            producto = producto,
+                            onClick = {
+                                productoSeleccionado = producto
+                                showSesionesDialog = true
+                            }
+                        )
                     }
                 }
             }
         }
     }
 
-    if (showDialog) {
-        NuevaSesionDialog(
-            productos = productos,
-            onDismiss = { showDialog = false },
-            onConfirm = { producto ->
-                productoSeleccionado = producto
-                viewModel.iniciarSesion(producto.id)
-                showDialog = false
-            }
-        )
+    // Dialog: sesiones existentes o nueva
+    productoSeleccionado?.let { producto ->
+        if (showSesionesDialog) {
+            val sesiones by viewModel.getSesionesByProducto(producto.id).observeAsState(emptyList())
+            SesionesDialog(
+                producto = producto,
+                sesiones = sesiones,
+                onDismiss = { showSesionesDialog = false },
+                onNuevaSesion = {
+                    showSesionesDialog = false
+                    viewModel.iniciarSesion(producto.id)
+                },
+                onAbrirSesion = { sesion ->
+                    showSesionesDialog = false
+                    navController.navigate("session/${sesion.id}/${producto.nombre}")
+                }
+            )
+        }
     }
+}
+
+@Composable
+fun SesionesDialog(
+    producto: Producto,
+    sesiones: List<Sesion>,
+    onDismiss: () -> Unit,
+    onNuevaSesion: () -> Unit,
+    onAbrirSesion: (Sesion) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(producto.nombre) },
+        text = {
+            Column {
+                Button(
+                    onClick = onNuevaSesion,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Nueva sesión")
+                }
+                if (sesiones.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        "Sesiones anteriores:",
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LazyColumn(
+                        modifier = Modifier.heightIn(max = 300.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        items(sesiones) { sesion ->
+                            Card(
+                                onClick = { onAbrirSesion(sesion) },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Text("Sesión #${sesion.id}", fontWeight = FontWeight.Bold)
+                                    Text(sesion.fecha, fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
+        }
+    )
 }
 
 @Composable
@@ -128,41 +191,4 @@ fun ProductoCard(producto: Producto, onClick: () -> Unit) {
             Icon(Icons.Default.Add, contentDescription = null)
         }
     }
-}
-
-@Composable
-fun NuevaSesionDialog(
-    productos: List<Producto>,
-    onDismiss: () -> Unit,
-    onConfirm: (Producto) -> Unit
-) {
-    var seleccionado by remember { mutableStateOf(productos.firstOrNull()) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Nueva sesión") },
-        text = {
-            Column {
-                Text("Selecciona el producto:")
-                Spacer(modifier = Modifier.height(8.dp))
-                productos.forEach { producto ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(
-                            selected = seleccionado == producto,
-                            onClick = { seleccionado = producto }
-                        )
-                        Text(producto.nombre)
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { seleccionado?.let { onConfirm(it) } }) {
-                Text("Iniciar")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
-        }
-    )
 }

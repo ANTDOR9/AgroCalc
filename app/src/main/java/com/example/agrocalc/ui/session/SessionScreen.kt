@@ -18,6 +18,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.agrocalc.data.Camion
 import com.example.agrocalc.viewmodel.AgroCalcViewModel
+import androidx.compose.material.icons.filled.Edit
+
+import androidx.compose.material.icons.filled.Star
+
+import androidx.compose.ui.unit.dp
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,7 +43,22 @@ fun SessionScreen(
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
                     }
-                }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        navController.navigate("chart/$sesionId/$productoNombre")
+                    }) {
+                        Icon(
+                            Icons.Default.Star,
+                            contentDescription = "Gráfica",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
             )
         },
         floatingActionButton = {
@@ -79,11 +100,12 @@ fun SessionScreen(
                 }
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(camiones) { camion ->
+                    items(items = camiones, key = { it.id }) { camion ->
                         CamionItem(
                             camion = camion,
                             numero = camiones.indexOf(camion) + 1,
-                            onEliminar = { viewModel.eliminarCamion(camion) }
+                            onEliminar = { viewModel.eliminarCamion(camion) },
+                            onEditar = { navController.navigate("editTruck/${camion.id}") }
                         )
                     }
                 }
@@ -126,7 +148,7 @@ fun ResumenItem(label: String, kg: Double, qq: Double) {
 }
 
 @Composable
-fun CamionItem(camion: Camion, numero: Int, onEliminar: () -> Unit) {
+fun CamionItem(camion: Camion, numero: Int, onEliminar: () -> Unit, onEditar: () -> Unit) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.padding(12.dp),
@@ -143,8 +165,13 @@ fun CamionItem(camion: Camion, numero: Int, onEliminar: () -> Unit) {
                     color = MaterialTheme.colorScheme.primary
                 )
             }
+            IconButton(onClick = onEditar) {
+                Icon(Icons.Default.Edit, contentDescription = "Editar",
+                    tint = MaterialTheme.colorScheme.primary)
+            }
             IconButton(onClick = onEliminar) {
-                Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
+                Icon(Icons.Default.Delete, contentDescription = "Eliminar",
+                    tint = MaterialTheme.colorScheme.error)
             }
         }
     }

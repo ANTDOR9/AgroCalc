@@ -11,6 +11,9 @@ interface SesionDao {
     @Query("SELECT * FROM sesiones WHERE id = :id")
     suspend fun getSesionById(id: Int): Sesion?
 
+    @Query("SELECT * FROM sesiones WHERE productoId = :productoId ORDER BY fecha DESC")
+    fun getSesionesByProducto(productoId: Int): Flow<List<Sesion>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertar(sesion: Sesion): Long
 
